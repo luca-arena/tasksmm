@@ -21,7 +21,7 @@ long richtextedittype = 2
 long richtexteditx64type = 3
 long richtexteditversion = 1
 string richtexteditkey = ""
-string appicon = ""
+string appicon = "E:\pbapps\tools\tasksmm\tasksmm.ico"
 string appruntimeversion = "19.2.0.2779"
 end type
 global tasksmm tasksmm

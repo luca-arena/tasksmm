@@ -1,0 +1,6 @@
+﻿$PBExportHeader$s_list.srs
+global type s_list from structure
+	string		id
+	string		name
+end type
+

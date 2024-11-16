@@ -10,6 +10,9 @@ global error error
 global message message
 end forward
 
+global variables
+
+end variables
 global type tasksmm from application
 string appname = "tasksmm"
 string themepath = "C:\Program Files (x86)\Appeon\PowerBuilder 19.0\IDE\theme"

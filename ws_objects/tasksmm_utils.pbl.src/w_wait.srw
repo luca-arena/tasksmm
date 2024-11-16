@@ -13,7 +13,7 @@ global type w_wait from window
 integer width = 1646
 integer height = 348
 boolean titlebar = true
-string title = "Attendere..."
+string title = "Please wait..."
 boolean minbox = true
 windowtype windowtype = popup!
 long backcolor = 16777215

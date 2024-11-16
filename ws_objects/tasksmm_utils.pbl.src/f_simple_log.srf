@@ -1,0 +1,38 @@
+﻿$PBExportHeader$f_simple_log.srf
+$PBExportComments$Scrive un messaggio in un file di log
+global type f_simple_log from function_object
+end type
+
+forward prototypes
+global subroutine f_simple_log (string as_filename, string as_msg)
+end prototypes
+
+global subroutine f_simple_log (string as_filename, string as_msg);//*
+// Write a message in a log file
+//
+// Special rules:
+// - if message = '!erase' deletes the log file
+// - if the message starts with '$time', the $time string is replaced with current date/time
+//
+// @param  as_filename name of the log file
+// @param  as_msg message
+//*
+
+long ll_file
+
+if as_msg = '!erase' then
+	if FileExists(as_filename) then
+		FileDelete(as_filename)
+	end if
+	return
+end if
+
+if Left(as_msg, 5) = '$time' then
+	as_msg = String(Today(), 'yyyy-mm-dd') + ' ' + String(Now(), 'hh:mm:ss') + '  ' + Mid(as_msg, 6)
+end if
+
+ll_file = FileOpen(as_filename, LineMode!, Write!, LockReadWrite!, Append!)
+FileWrite(ll_file, as_msg)
+FileClose(ll_file)
+end subroutine
+

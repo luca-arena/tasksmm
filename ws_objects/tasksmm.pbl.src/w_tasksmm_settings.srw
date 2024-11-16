@@ -56,6 +56,54 @@ type prototypes
 Function long ShellExecute(long hwnd, string lpOperation, string lpFile, string lpParameters, string lpDirectory, integer nShowCmd) Library "shell32.dll" alias for "ShellExecuteW"
 end prototypes
 
+forward prototypes
+protected subroutine of__get_boards ()
+end prototypes
+
+protected subroutine of__get_boards ();//*
+// Get the ToDo Boards from Trello
+//*
+
+JsonParser lnv_parser
+string ls_response
+int li_count, li_i
+long ll_row
+n_trello_api lnv_api
+s_board lstr_boards[]
+
+if f_is_empty(sle_api_key.Text) or f_is_empty(sle_token.Text) then
+	MessageBox('Error', 'Please fill the API Key and the Token.', Exclamation!)
+	return
+end if
+
+OpenWithParm(w_wait, 'Downloading Boards, please wait...')
+
+lnv_api = create n_trello_api
+lnv_api.of_init(sle_api_key.Text, sle_token.Text)
+try
+	lstr_boards = lnv_api.of_get_boards()
+catch (Exception lnv_except)
+	Close(w_wait)
+	MessageBox('Error', 'Error downloading Trello boards: ' + lnv_except.GetMessage())
+	return
+end try
+
+dw_people.Reset()
+li_count = UpperBound(lstr_boards)
+ll_row = 0
+for li_i = 1 to li_count
+	if Left(lstr_boards[li_i].name, 4) = 'ToDo' then
+		ll_row = dw_people.InsertRow(0)
+		dw_people.SetItem(ll_row, 'board_id', lstr_boards[li_i].id)
+		dw_people.SetItem(ll_row, 'name', Mid(lstr_boards[li_i].name, 6))
+	end if
+end for
+
+Close(w_wait)
+
+MessageBox('Information', String(ll_row) + ' ToDo Boards found.')
+end subroutine
+
 on w_tasksmm_settings.create
 this.cb_create_token=create cb_create_token
 this.cb_settings=create cb_settings
@@ -98,12 +146,14 @@ destroy(this.dw_people)
 destroy(this.r_1)
 end on
 
-event open;sle_api_key.Text = ProfileString('tasksmm.ini', 'settings', 'api_key', '')
-sle_token.Text = ProfileString('tasksmm.ini', 'settings', 'token', '')
+event open;n_settings lnv_settings
+s_settings lstr_settings
 
-if FileExists('people.config') then
-	dw_people.ImportFile(Text!, 'people.config', 1)
-end if
+lnv_settings = create n_settings
+lstr_settings = lnv_settings.of_load()
+sle_api_key.Text = lstr_settings.api_key
+sle_token.Text = lstr_settings.token
+lstr_settings.people.RowsCopy(1, lstr_settings.people.RowCount(), Primary!, dw_people, 1, Primary!)
 end event
 
 type cb_create_token from commandbutton within w_tasksmm_settings
@@ -123,7 +173,7 @@ end type
 
 event clicked;string ls_url
 
-if Trim(sle_api_key.Text) = '' then
+if f_is_empty(sle_api_key.Text) then
 	MessageBox('Error', 'Please fill the API Key first.', Exclamation!)
 	return
 end if
@@ -269,16 +319,18 @@ string facename = "Tahoma"
 string text = "Save Settings"
 end type
 
-event clicked;if not FileExists('tasksmm.ini') then
-	long ll_file
-	ll_file = FileOpen('tasksmm.ini', LineMode!, Write!, LockReadWrite!, Replace!)
-	FileWrite(ll_file, '[settings]')
-	FileClose(ll_file)
-end if
+event clicked;n_settings lnv_settings
+s_settings lstr_settings
 
-SetProfileString('tasksmm.ini', 'settings', 'api_key', sle_api_key.Text)
-SetProfileString('tasksmm.ini', 'settings', 'token', sle_token.Text)
-dw_people.SaveAs('people.config', Text!, false)
+lnv_settings = create n_settings
+
+lstr_settings.api_key = sle_api_key.Text
+lstr_settings.token = sle_token.Text
+lstr_settings.people = create datastore
+lstr_settings.people.DataObject = 'd_people'
+dw_people.RowsCopy(1, dw_people.RowCount(), Primary!, lstr_settings.people, 1, Primary!)
+
+lnv_settings.of_save(lstr_settings)
 
 MessageBox('Information', 'Settings saved.')
 CloseWithReturn(parent, 1)
@@ -299,51 +351,7 @@ string facename = "Tahoma"
 string text = "Download Boards from Trello"
 end type
 
-event clicked;HttpClient lnv_http
-JsonParser lnv_parser
-string ls_url, ls_response, ls_boards, ls_name
-int li_count, li_i
-long ll_root, ll_item, ll_row
-
-if Trim(sle_api_key.Text) = '' or Trim(sle_token.Text) = '' then
-	MessageBox('Error', 'Please fill the API Key and the Token.', Exclamation!)
-	return
-end if
-
-OpenWithParm(w_wait, 'Downloading Boards, please wait...')
-
-// Initialize HttpClient
-lnv_http = create HttpClient
-lnv_parser = create JsonParser
-
-// Set the URL for the Trello API request
-ls_url = 'https://api.trello.com/1/members/me/boards?key=' + sle_api_key.Text + "&token=" + sle_token.Text
-
-// Send the GET request
-lnv_http.SendRequest('GET', ls_url)
-lnv_http.GetResponseBody(ls_response)
-
-// Initialize the people list
-dw_people.Reset()
-
-// Loop through the JSON array to get board names
-lnv_parser.LoadString(ls_response)
-ll_root = lnv_parser.GetRootItem()
-li_count = lnv_parser.GetChildCount(ll_root)
-ll_row = 0
-for li_i = 1 to li_count
-	ll_item = lnv_parser.GetChildItem(ll_root, li_i)
-	ls_name = lnv_parser.GetItemString(ll_item, "name")
-	if Left(ls_name, 4) = 'ToDo' then
-		ll_row = dw_people.InsertRow(0)
-		dw_people.SetItem(ll_row, 'name', Mid(ls_name, 6))
-		dw_people.SetItem(ll_row, 'board_id', lnv_parser.GetItemString(ll_item, 'id'))
-	end if
-end for
-
-Close(w_wait)
-
-MessageBox('Information', String(ll_row) + ' ToDo Boards found.')
+event clicked;of__get_boards()
 end event
 
 type dw_people from datawindow within w_tasksmm_settings

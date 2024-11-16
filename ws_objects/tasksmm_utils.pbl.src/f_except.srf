@@ -1,0 +1,22 @@
+﻿$PBExportHeader$f_except.srf
+global type f_except from function_object
+end type
+
+forward prototypes
+global function Exception f_except (string as_message)
+end prototypes
+
+global function Exception f_except (string as_message);//*
+// Returns an Exception with the given message
+//
+// @param  as_message message to be but inside the Exception
+//*
+
+Exception lnv_except
+
+lnv_except = create Exception
+lnv_except.SetMessage(as_message)
+
+return lnv_except
+end function
+

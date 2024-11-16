@@ -1,0 +1,39 @@
+﻿$PBExportHeader$f_assert.srf
+$PBExportComments$[400std0] Verifica una condizione e, se non soddisfatta, blocca il programma
+global type f_assert from function_object
+end type
+
+forward prototypes
+global subroutine f_assert (string as_context, boolean ab_cond, string as_msg)
+end prototypes
+
+global subroutine f_assert (string as_context, boolean ab_cond, string as_msg);//*
+//	Throws a RuntimeError if a condition is false											
+// 
+// @param  as_context context where the assertion is tested (usually object::method)
+// @param  ab_cond condition to be verified
+// @param  as_msg message to be inserted in the RuntimeError if the condition is false
+//*
+
+long ll_assert
+RuntimeError lre_error
+
+if ab_cond then
+	return
+end if
+
+ll_assert = FileOpen('assert.txt', LineMode!, Write!, LockReadWrite!, Append!)
+FileWrite(ll_assert, 'Assertion failed on ' + String(Today(), 'yyyy-mm-dd') + ' at ' + &
+	String(Now(), 'hh:mm:ss'))
+FileWrite(ll_assert, 'Context: ' + as_context)
+FileWrite(ll_assert, 'Message: ' + as_msg)
+FileWrite(ll_assert, '')
+FileClose(ll_assert)
+
+lre_error = create RuntimeError
+lre_error.Text = '*** ASSERTION FAILED ***~n~n' + &
+	'Context: ' + as_context + '~nMessage: ' + as_msg
+
+throw lre_error
+end subroutine
+

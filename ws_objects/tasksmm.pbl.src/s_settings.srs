@@ -1,0 +1,7 @@
+﻿$PBExportHeader$s_settings.srs
+global type s_settings from structure
+	string		api_key
+	string		token
+	datastore		people
+end type
+

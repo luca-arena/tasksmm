@@ -1,0 +1,6 @@
+﻿$PBExportHeader$s_board.srs
+global type s_board from structure
+	string		id
+	string		name
+end type
+

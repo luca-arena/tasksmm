@@ -1,0 +1,11 @@
+﻿$PBExportHeader$f_is_empty.srf
+global type f_is_empty from function_object
+end type
+
+forward prototypes
+global function boolean f_is_empty (string as_string)
+end prototypes
+
+global function boolean f_is_empty (string as_string);return IsNull(as_string) or Trim(as_string) = ''
+end function
+

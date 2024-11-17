@@ -73,7 +73,6 @@ OpenWithParm(w_wait, 'Synchronizing ' + String(li_count) + ' tasks with Trello..
 for li_i = 1 to li_count
 	try
 		of__sync_task(lds_tasks, li_i)
-		Sleep(1) // Needed to avoid hanging
 	catch (Exception lnv_except)
 		MessageBox('Error while syncing tasks', lnv_except.GetMessage())
 		Close(w_wait)
@@ -111,7 +110,7 @@ do while ll_start > 0
 	end if
 	
 	ll_row = lds_tasks.InsertRow(0)
-	lds_tasks.SetItem(ll_row, 'name', ls_person_code)
+	lds_tasks.SetItem(ll_row, 'code', ls_person_code)
 	lds_tasks.SetItem(ll_row, 'task', ls_task)
 	lds_tasks.SetItem(ll_row, 'due_date', ld_due_date)	
 	
@@ -133,9 +132,9 @@ date ld_due
 string ls_person_code, ls_todo_id, ls_board_id, ls_task, ls_task_id
 s_card lstr_card
 
-// Get the Person Code (that is stored in the "name" field) and the person's Board ID (from the Settings)
+// Get the Person Code and the person's Board ID (from the Settings)
 
-ls_person_code = ads_tasks.GetItemString(ai_row, 'name')
+ls_person_code = ads_tasks.GetItemString(ai_row, 'code')
 ls_task = ads_tasks.GetItemString(ai_row, 'task')
 ld_due = ads_tasks.GetItemDate(ai_row, 'due_date')
 
@@ -168,7 +167,9 @@ lstr_card.name = ls_task
 lstr_card.due_date = ld_due
 lstr_card.list_id = ls_todo_id
 ls_task_id = inv_api.of_add_card(lstr_card)
+
 ads_tasks.SetItem(ai_row, 'task_id', ls_task_id)
+ads_tasks.SetItem(ai_row, 'code', ls_person_code)
 ads_tasks.SetItem(ai_row, 'name', inv_settings.of_name_by_person_code(istr_settings, ls_person_code))
 ads_tasks.SetItem(ai_row, 'status', 'ToDo')
 
